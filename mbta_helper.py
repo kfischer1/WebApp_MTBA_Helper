@@ -1,3 +1,4 @@
+
 import urllib.request   # urlencode function
 import json
 
@@ -15,7 +16,11 @@ def get_json(url):
     Given a properly formatted URL for a JSON web API request, return
     a Python JSON object containing the response to that request.
     """
-    pass
+    f = urllib.request.urlopen(url)
+    response_text = f.read().decode('utf-8')
+    response_data = json.loads(response_text)
+    return response_data
+
 
 
 def get_lat_long(place_name):
@@ -25,6 +30,7 @@ def get_lat_long(place_name):
     See https://developers.google.com/maps/documentation/geocoding/
     for Google Maps Geocode API URL formatting requirements.
     """
+
     pass
 
 
@@ -44,3 +50,11 @@ def find_stop_near(place_name):
     distance from the given place to that stop.
     """
     pass
+
+
+def main():
+    url = GMAPS_BASE_URL + '?address=Prudential%20Tower'
+    print(get_json(url))
+
+if __name__ =='__main__':
+    main()
