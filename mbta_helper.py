@@ -1,48 +1,63 @@
-import urllib.request
 import json
+import urllib.request
 from pprint import pprint
- 
-def response_to_coord(response):
-    """Returns latitude and longitude as a list when given the JSON response of a Google Maps API geocode query"""
-    coord = []
-    coord.append(response['results'][0]['geometry']['location']['lat'])
-    coord.append(response['results'][0]['geometry']['location']['lng'])
-    return coord
- 
-def JSON_response(url):
-    """Takes a url and gets the response in JSON format"""
+
+def get_json(url):
+    """
+    Given a properly formatted URL for a JSON web API request, return
+    a Python JSON object containing the response to that request.
+    """
     f = urllib.request.urlopen(url)
     response_text = f.read().decode('utf-8')
-    return json.loads(response_text)
+    return json.loads(response_text) 
+
+def list_latLong(jresponse):
+    """
+    Given a place name or address, return a (latitude, longitude) tuple
+    with the coordinates of the given place.    
+    """
+    whereabouts = []
+    lat = jresponse['results'][0]['geometry']['location']['lat']
+    lon = jresponse['results'][0]['geometry']['location']['lng']
+    whereabouts.append(lat)
+    whereabouts.append(lon)
+    return whereabouts
  
-def google_url(address):
-    """Returns a Google Maps API geocode request url from an address or place name"""
-    params = address.replace(' ', '+')
-    return 'https://maps.googleapis.com/maps/api/geocode/json?address=%s&key=AIzaSyCf8_TxB2ELtA2kgDQZoVmZJHZZaufoK5w' %(params)
+def apiURL(placeoraddress):
+    """
+    Takes the name of a place or a given address and returns the API geocode request url for it 
+    """
+    addToLink = placeoraddress.replace(' ', '+')
+    return 'https://maps.googleapis.com/maps/api/geocode/json?address=%s&key=AIzaSyCf8_TxB2ELtA2kgDQZoVmZJHZZaufoK5w' %(addToLink)
  
-def mbta_url(coord):
+def stops(loc):
+    """
+    Uses the coordinates from the user's address and returns the response from the mbta api
+    """
+    response_from_google = get_json(apiURL(loc))
+    position = list_latLong(response_from_google)
+    answerMBTA = get_json(urlMBTAapi(position))
+    return answerMBTA
+ 
+def urlMBTAapi(whereabouts):
     """Returns a MBTA API request url from a set of coordinates"""
-    return 'http://realtime.mbta.com/developer/api/v2/stopsbylocation?api_key=vSPU1c7EtEiU-JKg1C5dWA&lat=%s&lon=%s&format=json' %(coord[0], coord[1])
- 
-def get_stops(address):
-    """Returns the response of a stopsbylocation query using the coordinates from a given address"""
-    goog_response = JSON_response(google_url(address))
-    coordinates = response_to_coord(goog_response)
-    mbta_response = JSON_response(mbta_url(coordinates))
-    return mbta_response
- 
-def print_stop(address):
-    """Prints the nearest stop to a given address"""
+    return 'http://realtime.mbta.com/developer/api/v2/stopsbylocation?api_key=vSPU1c7EtEiU-JKg1C5dWA&lat=%s&lon=%s&format=json' %(whereabouts[0], whereabouts[1])
+
+def alert_user(userLoc):
+    """
+    Takes the user location and prints the nearest station. If there is an index error,
+    we told the function to alert the user that there is no nearby station. 
+    """
     try:
-        mbta_response = get_stops(address)
-        stop_name = mbta_response['stop'][0]['stop_name']
-        distance = float(mbta_response['stop'][0]['distance'])
-        print('The closest MBTA station to %s is %s, which is %.2f miles away.' %(address, stop_name, distance))
+        answerMBTA = stops(userLoc)
+        name_of_stop = answerMBTA['stop'][0]['stop_name']
+        totalDistance = float(answerMBTA['stop'][0]['distance'])
+        print('The nearest MBTA station is located at %s, approximately %.2f miles from %s.' %(name_of_stop, totalDistance, userLoc))
     except IndexError:
-        print('There is no MBTA station close to %s' %(address))
+        print('%s does not have a nearby MBTA station' %(userLoc))
  
 def main():
-    print_stop('Massachusetts Institute of Technology')
+    alert_user('Massachusetts Institute of Technology')
  
 if __name__ == '__main__':
     main()
