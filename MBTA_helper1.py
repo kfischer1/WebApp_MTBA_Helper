@@ -28,7 +28,7 @@ def apiURL(placeoraddress):
     Takes the name of a place or a given address and returns the API geocode request url for it 
     """
     addToLink = placeoraddress.replace(' ', '+')
-    return 'https://maps.googleapis.com/maps/api/geocode/json?address=%s&key=AIzaSyCf8_TxB2ELtA2kgDQZoVmZJHZZaufoK5w' %(addToLink)
+    return 'https://maps.googleapis.com/maps/api/geocode/json?address=%s&key=AIzaSyAeym-793wVrgYrbrjSBRVLxG_aI61s7fI' %(addToLink)
  
 def stops(loc):
     """
@@ -52,12 +52,14 @@ def alert_user(userLoc):
         answerMBTA = stops(userLoc)
         name_of_stop = answerMBTA['stop'][0]['stop_name']
         totalDistance = float(answerMBTA['stop'][0]['distance'])
-        print('The nearest MBTA station is located at %s, approximately %.2f miles from %s.' %(name_of_stop, totalDistance, userLoc))
+        return name_of_stop, totalDistance
     except IndexError:
-        print('%s does not have a nearby MBTA station' %(userLoc))
+        return None, None
  
 def main():
-    alert_user('Massachusetts Institute of Technology')
+    userLoc = 'Massachusetts Institute of Technology'
+    name, distance = alert_user(userLoc)
+    print('The nearest MBTA station is located at %s, approximately %.2f miles from %s.' %(name, distance, userLoc))
  
 if __name__ == '__main__':
     main()
